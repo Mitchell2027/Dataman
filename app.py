@@ -19,7 +19,7 @@ SESSION = "player-1" # STUB: one learner until there is a login.
 RNG = random.Random()
 
 MENU = """
-=== DATAMAN ===
+======= DATAMAN MENU ========
 1) Play Answer Checker
 2) Play Memory Bank
 3) Play Number guesser
@@ -66,33 +66,39 @@ def play_round(store, problem):
 
 
 def practice(store):
-    memory_bank = MemoryBank(store, "set-1")
     while True:
-        text = input("Problem to try (like 6 x 6 or 12 / 5; blank to stop): ")
-        if not text.strip():
+        print("\n------- ANSWER CHECKER -------")
+        print("1. Enter a problem")
+        print("2. Stop Session")
+        choice = input("Choose an option: ").strip()
+        if choice == "2":
+            print("Practice session ended.")
             return
+        if choice != "1":
+            print("Please choose 1 or 2.")
+            continue
+        text = input("Enter a problem (ex: 6 x 6 or 12 / 5): ") 
         try:
             problem = parse_problem(text)
         except InvalidProblem as err:
             print(err)
             continue
-        out = play_round(store, problem)
-        if out.status == "reveal" and input("Save it in the Memory Bank? (y/n) ").strip().lower() == "y":
-            try:
-                print("Saved." if memory_bank.add_problem(problem.prompt) else "Already saved.")
-            except SetFull as err:
-                print(f"Oops! {err}")
+        play_round(store, problem)
         if finished_count(store, SESSION) % SCORE_EVERY == 0:
             show_score(store)
 
 
 def fill_bank(memory_bank):
     """Keep asking for problems until the bank is full (10) or the player stops."""
-    while not memory_bank.is_full():
+    while len(memory_bank.members()) < MAX_SET_SIZE:
         n = len(memory_bank.members()) + 1
-        text = input(f"Problem {n} of {MAX_SET_SIZE} (like 2 + 7; blank to stop): ")
-        if not text.strip():
+        text = input(f"\nEnter Problem {n} of {MAX_SET_SIZE} (type S to stop): ").strip()
+        if text.lower() == "s":
+            print("Finished adding problems.")
             return
+        if not text:
+            print("Please enter a math problem.")
+            continue
         try:
             if memory_bank.add_problem(text):
                 print("Stored.")
@@ -100,33 +106,69 @@ def fill_bank(memory_bank):
                 print("That problem is already stored. Try a different one.")
         except InvalidProblem as err:
             print(f"Oops! {err}")
-    print(f"The Memory Bank is full with {MAX_SET_SIZE} problems. Choose 'go' to practice!")
+    print(f"The Memory Bank is full!")
 
 
 def bank(store):
+    """Memory Bank menu."""
     memory_bank = MemoryBank(store, "set-1")
+    if not memory_bank.members():
+        print("\nWelcome to Memory Bank!")
+        print("You can save up to 10 math problems.")
+        fill_bank(memory_bank)
     while True:
-        held = memory_bank.members()
-        print(f"\nMemory bank holds {len(held)} of {MAX_SET_SIZE}: {', '.join(held) or '(empty)'}")
-        choice = input("(a)dd problems, (g)o practice in random order, (b)ack > ").strip().lower()
-        if choice == "b":
-            return
-        if choice == "a":
+        print("\n---------- MEMORY BANK -----------")
+        print("1. Add Problems")
+        print("2. Practice Saved Problems")
+        print("3. View Score")
+        print("4. Back to Main Menu")
+        choice = input("\nChoose an option: ").strip()
+        if choice == "1":
             fill_bank(memory_bank)
-        elif choice == "g":
-            problems = memory_bank.random_order(RNG)
-            if not problems:
-                print("The Memory Bank is empty. Add a problem first!")
+        elif choice == "2":
+            held = memory_bank.members()
+            if not held:
+                print("\nYour Memory Bank is empty.")
                 continue
-            start = time.monotonic()      # STUB: manual shows 'atom clock ticks'; we show seconds.
-            for p in problems:
-                play_round(store, p)
-            show_score(store, len(problems), round(time.monotonic() - start))
-        else:
-            print("Please type a, g or b.")
+            print("\nStarting Memory Bank practice!")
+            print("Press ENTER for a random problem.")
+            print("Type S to stop practicing.")
+            while True:
+                command = input(
+                    "\nPress ENTER for a problem or type S to stop: "
+                ).strip()
+                if command.lower() == "s":
+                    print("Practice session ended.")
+                    break
+                if command:
+                    print("Press ENTER for a problem or S to stop.")
+                    continue
+                problem_text = RNG.choice(held)
+                try:
+                    problem = parse_problem(problem_text)
+                    play_round(store, problem)
+                except InvalidProblem as err:
+                    print(f"Invalid saved problem: {err}")
+        elif choice == "3":
+            correct, total = score_last(store, SESSION) 
+            if total == 0:
+                print("\nNo completed problems yet.")
+            else:
+                accuracy = (correct / total) * 100
+                print("\n===== MEMORY BANK SCORE =====")
+                print(f"Correct: {correct}")
+                print(f"Total: {total}")
+                print(f"Accuracy: {accuracy:.1f}%")
 
+        elif choice == "4":
+            print("Returning to the main menu.")
+            break
+
+        else:
+            print("Invalid choice. Please select 1-4.")
 
 def guesser(store):
+    print("\n------ Welcome to Number Guesser --------")
     game = GuessGame(store, SESSION, new_secret(RNG))
     print(f"I picked a secret number from {GUESS_LOW} to {GUESS_HIGH}. (q to give up)")
     while not game.is_finished():
@@ -177,6 +219,7 @@ def main(argv=None):
     try:
         while True:
             print(MENU)
+            print("")
             choice = input("Choose 1-5 > ").strip()
             if choice == "5":
                 break
@@ -186,7 +229,7 @@ def main(argv=None):
                 print("Please type a number from 1 to 5.")
     except (EOFError, KeyboardInterrupt):
         print()
-    print("Goodbye.")
+    print("Thanks For Playing.")
 
 
 if __name__ == "__main__":
