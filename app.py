@@ -23,8 +23,7 @@ MENU = """
 1) Play Answer Checker
 2) Play Memory Bank
 3) Play Number guesser
-4) Report
-5) Exit"""
+4) Exit"""
 
 
 def parse_int(raw):
@@ -190,43 +189,24 @@ def guesser(store):
         else:
             print(f"The secret number is between {out.low} and {out.high}.")
 
-# Report Option
-def report(store):
-    print(f"\nAnswer checker for {SESSION}:")
-    rounds = curator_report(store, SESSION)
-    if not rounds:
-        print("  not attempted")
-    for r in rounds:
-        print(f"  {r['problem']}: {r['label']}")
-        for a in r["attempts"]:
-            print(f"    try {a['try']}: answered {a['answer']} -> "
-                  f"{'correct' if a['correct'] else 'wrong'}")
-    if rounds:
-        right, tried = score_last(store, SESSION)
-        print(f"  Latest score: {right} of {tried} right")
-    g = guesser_report(store, SESSION)
-    best = f", best win in {g['best']} tries" if g["best"] else ""
-    print(f"Number guesser: won {g['won']} of {g['played']}{best}")
-    print(f"Memory bank set-1: {len(MemoryBank(store, 'set-1').members())} of {MAX_SET_SIZE} problems")
-
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--store", choices=["memory", "json"], default="memory")
     args = parser.parse_args(argv)
     store = JsonFileStore() if args.store == "json" else MemoryStore()
-    actions = {"1": practice, "2": bank, "3": guesser, "4": report}
+    actions = {"1": practice, "2": bank, "3": guesser,}
     try:
         while True:
             print(MENU)
             print("")
-            choice = input("Choose 1-5 > ").strip()
-            if choice == "5":
+            choice = input("Choose 1-4 > ").strip()
+            if choice == "4":
                 break
             if choice in actions:
                 actions[choice](store)
             else:
-                print("Please type a number from 1 to 5.")
+                print("Please type a number from 1 to 4.")
     except (EOFError, KeyboardInterrupt):
         print()
     print("Thanks For Playing.")
