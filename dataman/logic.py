@@ -2,20 +2,15 @@
 
 Rules live here. This file never calls input() or print().
 It reaches data only through a store object (see store.py).
-Needs Python 3.10+ (uses `int | None` annotations).
 
-Rules follow the original Dataman manual: two tries per problem, up to ten
-problems in the Memory Bank, a score after ten problems, division answers as
-whole number plus remainder, and a Number Guesser over 9..100 that reports the
-range the secret still lies in.
 """
 import re
 from dataclasses import dataclass
 
-MAX_ATTEMPTS = 2      # Manual: two tries per problem.
-MAX_SET_SIZE = 10     # Manual: up to ten problems in the Memory Bank.
-SCORE_EVERY = 10      # Manual: score is shown after ten problems.
-GUESS_LOW, GUESS_HIGH = 9, 100   # Manual: secret is between 9 and 100.
+MAX_ATTEMPTS = 2      # Two tries per problem.
+MAX_SET_SIZE = 10     # Up to ten problems in the Memory Bank.
+SCORE_EVERY = 10      # Score is shown after ten problems.
+GUESS_LOW, GUESS_HIGH = 9, 100   # Secret is between 9 and 100.
 
 _PROBLEM_RE = re.compile(r"^\s*(\d+)\s*([+\-x×*/÷])\s*(\d+)\s*=?\s*$", re.I)
 _OPS = {"+": "+", "-": "-", "x": "x", "×": "x", "*": "x", "/": "÷", "÷": "÷"}

@@ -42,7 +42,7 @@ def show_score(store, n=SCORE_EVERY, seconds=None):
     extra = f", in {seconds} seconds" if seconds is not None else ""
     print(f"Score: {right} of {tried} right{extra}.")
 
-
+# Two tries handling, 
 def play_round(store, problem):
     """Two tries at one problem. Returns the final Outcome."""
     # Creates an new practice session
@@ -64,7 +64,7 @@ def play_round(store, problem):
     return out
 
 
-
+# Answer Checker Game
 def practice(store):
     while True:
         print("\n------- ANSWER CHECKER -------")
@@ -87,12 +87,12 @@ def practice(store):
         if finished_count(store, SESSION) % SCORE_EVERY == 0:
             show_score(store)
 
-
+# Memory Bank Game
 def fill_bank(memory_bank):
     """Keep asking for problems until the bank is full (10) or the player stops."""
     while len(memory_bank.members()) < MAX_SET_SIZE:
         n = len(memory_bank.members()) + 1
-        text = input(f"\nEnter Problem {n} of {MAX_SET_SIZE} (type S to stop): ").strip()
+        text = input(f"\nEnter problem {n} of {MAX_SET_SIZE} (type S to stop): ").strip()
         if text.lower() == "s":
             print("Finished adding problems.")
             return
@@ -108,7 +108,7 @@ def fill_bank(memory_bank):
             print(f"Oops! {err}")
     print(f"The Memory Bank is full!")
 
-
+# Memory Bank menu
 def bank(store):
     """Memory Bank menu."""
     memory_bank = MemoryBank(store, "set-1")
@@ -166,7 +166,7 @@ def bank(store):
 
         else:
             print("Invalid choice. Please select 1-4.")
-
+# Number Guesser
 def guesser(store):
     print("\n------ Welcome to Number Guesser --------")
     game = GuessGame(store, SESSION, new_secret(RNG))
@@ -190,7 +190,7 @@ def guesser(store):
         else:
             print(f"The secret number is between {out.low} and {out.high}.")
 
-
+# Report Option
 def report(store):
     print(f"\nAnswer checker for {SESSION}:")
     rounds = curator_report(store, SESSION)

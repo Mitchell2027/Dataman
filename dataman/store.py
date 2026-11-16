@@ -1,7 +1,5 @@
 """Stubbed data layer.
 
-Two stand-ins for a database. Both give the logic layer the same seven methods.
-Swap one for the other and logic.py does not change.
 """
 import json
 from pathlib import Path
