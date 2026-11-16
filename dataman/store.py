@@ -1,3 +1,74 @@
-"""Compatibility wrapper for the root store module."""
+"""Stubbed data layer.
 
-from store import *  # noqa: F401,F403
+Two stand-ins for a database. Both give the logic layer the same seven methods.
+Swap one for the other and logic.py does not change.
+"""
+import json
+from pathlib import Path
+
+
+class MemoryStore:
+    """Lives in RAM. Gone when the program ends."""
+
+    def __init__(self):
+        self._attempts: list[dict] = []
+        self._sets: dict[str, list[str]] = {}
+        self._games: list[dict] = []
+
+    def save_attempt(self, session_id, problem_id, try_number, answer, correct):
+        self._attempts.append({
+            "session_id": session_id, "problem_id": problem_id,
+            "try": try_number, "answer": answer, "correct": correct,
+        })
+
+    def attempts_for(self, session_id, problem_id):
+        return [a for a in self._attempts
+                if a["session_id"] == session_id and a["problem_id"] == problem_id]
+
+    def attempts_for_player(self, player_id):
+        """Convention: session ids look like '<player>:<round>'."""
+        prefix = f"{player_id}:"
+        return [a for a in self._attempts if a["session_id"].startswith(prefix)]
+
+    def members(self, set_id):
+        return list(self._sets.get(set_id, []))
+
+    def add_member(self, set_id, problem_id):
+        self._sets.setdefault(set_id, []).append(problem_id)
+
+    def save_game(self, player_id, won, tries):
+        self._games.append({"player_id": player_id, "won": won, "tries": tries})
+
+    def games_for(self, player_id):
+        return [g for g in self._games if g["player_id"] == player_id]
+
+
+class JsonFileStore(MemoryStore):
+    """Same methods. Writes to a file, so evidence survives a restart.
+    Prototype-grade: no locking, no schema versioning, a corrupt file is not handled."""
+
+    def __init__(self, path="dataman_store.json"):
+        super().__init__()
+        self.path = Path(path)
+        if self.path.exists():
+            raw = json.loads(self.path.read_text())
+            self._attempts = raw.get("attempts", [])
+            self._sets = raw.get("sets", {})
+            self._games = raw.get("games", [])
+
+    def _flush(self):
+        self.path.write_text(json.dumps(
+            {"attempts": self._attempts, "sets": self._sets, "games": self._games},
+            indent=2))
+
+    def save_attempt(self, *args):
+        super().save_attempt(*args)
+        self._flush()
+
+    def add_member(self, *args):
+        super().add_member(*args)
+        self._flush()
+
+    def save_game(self, *args):
+        super().save_game(*args)
+        self._flush()
