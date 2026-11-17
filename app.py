@@ -6,13 +6,10 @@ Run from the project root:
 """
 import argparse
 import random
-import time
 
-from dataman.logic import (GUESS_HIGH, GUESS_LOW, MAX_SET_SIZE, SCORE_EVERY,
-                           GuessGame, InvalidProblem, MemoryBank, OutOfRange,
-                           PracticeSession, SetFull, curator_report,
-                           finished_count, guesser_report, new_secret,
-                           next_round_id, parse_problem, score_last)
+from dataman.logic import (MAX_SET_SIZE, SCORE_EVERY, InvalidProblem, MemoryBank, 
+                           PracticeSession, SetFull, finished_count, next_round_id, 
+                           parse_problem, score_last)
 from dataman.store import JsonFileStore, MemoryStore
 
 SESSION = "player-1" # STUB: one learner until there is a login.
@@ -22,26 +19,22 @@ MENU = """
 ======= DATAMAN MENU ========
 1) Play Answer Checker
 2) Play Memory Bank
-3) Play Number guesser
-4) Exit"""
+3) Exit"""
 
 
 def parse_int(raw):
     """Return an int, or None if raw is not a whole number."""
-    # Validate user input
     try:
         return int(raw.strip()) # Remove extra spaces
     except ValueError:
         return None
 
 # Calculate and display performance
-def show_score(store, n=SCORE_EVERY, seconds=None):
-    # retrieves the number of correct answers and attempts
-    right, tried = score_last(store, SESSION, n)
-    extra = f", in {seconds} seconds" if seconds is not None else ""
-    print(f"Score: {right} of {tried} right{extra}.")
+def show_score(store):
+    right, tried = score_last(store, SESSION, SCORE_EVERY)
+    print(f"Score: {right} of {tried} right.")
 
-# Two tries handling, 
+# Two attempt practice logic 
 def play_round(store, problem):
     """Two tries at one problem. Returns the final Outcome."""
     # Creates an new practice session
@@ -165,48 +158,24 @@ def bank(store):
 
         else:
             print("Invalid choice. Please select 1-4.")
-# Number Guesser
-def guesser(store):
-    print("\n------ Welcome to Number Guesser --------")
-    game = GuessGame(store, SESSION, new_secret(RNG))
-    print(f"I picked a secret number from {GUESS_LOW} to {GUESS_HIGH}. (q to give up)")
-    while not game.is_finished():
-        raw = input("Your guess: ")
-        if raw.strip().lower() == "q":
-            print("Okay, game stopped. It will not be counted.")
-            return
-        value = parse_int(raw)
-        if value is None:
-            print("Please type a whole number, like 12.")
-            continue
-        try:
-            out = game.guess(value)
-        except OutOfRange:
-            print(f"Try a number from {GUESS_LOW} to {GUESS_HIGH}. That one did not use up a try.")
-            continue
-        if out.status == "won":
-            print(f"You got it in {out.tries_used} {'try' if out.tries_used == 1 else 'tries'}!")
-        else:
-            print(f"The secret number is between {out.low} and {out.high}.")
-
 
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--store", choices=["memory", "json"], default="memory")
     args = parser.parse_args(argv)
     store = JsonFileStore() if args.store == "json" else MemoryStore()
-    actions = {"1": practice, "2": bank, "3": guesser,}
+    actions = {"1": practice, "2": bank}
     try:
         while True:
             print(MENU)
             print("")
-            choice = input("Choose 1-4 > ").strip()
-            if choice == "4":
+            choice = input("Choose 1-3 > ").strip()
+            if choice == "3":
                 break
             if choice in actions:
                 actions[choice](store)
             else:
-                print("Please type a number from 1 to 4.")
+                print("Please type a number from 1 to 3.")
     except (EOFError, KeyboardInterrupt):
         print()
     print("Thanks For Playing.")

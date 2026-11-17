@@ -11,7 +11,6 @@ class MemoryStore:
     def __init__(self):
         self._attempts: list[dict] = []
         self._sets: dict[str, list[str]] = {}
-        self._games: list[dict] = []
 
     def save_attempt(self, session_id, problem_id, try_number, answer, correct):
         self._attempts.append({
@@ -34,13 +33,6 @@ class MemoryStore:
     def add_member(self, set_id, problem_id):
         self._sets.setdefault(set_id, []).append(problem_id)
 
-    def save_game(self, player_id, won, tries):
-        self._games.append({"player_id": player_id, "won": won, "tries": tries})
-
-    def games_for(self, player_id):
-        return [g for g in self._games if g["player_id"] == player_id]
-
-
 class JsonFileStore(MemoryStore):
     """Same methods. Writes to a file, so evidence survives a restart.
     Prototype-grade: no locking, no schema versioning, a corrupt file is not handled."""
@@ -52,11 +44,10 @@ class JsonFileStore(MemoryStore):
             raw = json.loads(self.path.read_text())
             self._attempts = raw.get("attempts", [])
             self._sets = raw.get("sets", {})
-            self._games = raw.get("games", [])
 
     def _flush(self):
         self.path.write_text(json.dumps(
-            {"attempts": self._attempts, "sets": self._sets, "games": self._games},
+            {"attempts": self._attempts, "sets": self._sets,},
             indent=2))
 
     def save_attempt(self, *args):
@@ -65,8 +56,4 @@ class JsonFileStore(MemoryStore):
 
     def add_member(self, *args):
         super().add_member(*args)
-        self._flush()
-
-    def save_game(self, *args):
-        super().save_game(*args)
         self._flush()
